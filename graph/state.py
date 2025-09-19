@@ -135,7 +135,7 @@ class UserPersona(BaseModel):
     preferred_features: List[str] = Field(default_factory=list, description="Valued features")
     price_sensitivity: str = Field(description="Price sensitivity level")
     persona_size: str = Field(description="Estimated persona size")
-    accessibility_needs: List[str] = Field(default_factory=list, description="Accessibility needs")
+    accessibility_needs: Optional[List[str]] = Field(default_factory=list, description="Accessibility needs")
 
 class UserPersonaAnalysisOutput(BaseModel):
     """Output from User Persona Analysis Node."""
