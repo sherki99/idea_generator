@@ -1,0 +1,16 @@
+[project]
+name = "idea-generator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bs4>=0.0.2",
+    "google-search-results>=2.4.2",
+    "langchain>=0.3.27",
+    "langchain-community[all]>=0.3.29",
+    "langchain-openai>=0.3.33",
+    "langgraph>=0.6.7",
+    "praw>=7.8.1",
+    "python-dotenv>=0.9.9",
+]
