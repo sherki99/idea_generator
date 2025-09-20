@@ -22,6 +22,16 @@ Problem-Solution Matcher Node → Match pain points with feasible solutions
 
 
 
+# Market Research Node → Web scraping, trend analysis, competitor research
+# Pain Point Discovery Node → Reddit/forum scraping, customer complaint analysis
+# User Persona Analysis Node → Demographic research, buying behavior analysis
+
+
+# Reddit/Forum Scraper → Find real user complaints and needs
+# Google Trends API → Identify rising search patterns
+# ProductHunt API → Analyze successful launches and gaps
+# LinkedIn Sales Navigator API → B2B market research
+# Twitter/X API → Social listening for pain points
 ----  ------ ----- ----- ----- ----- ----- ----- ----- -
 
 
