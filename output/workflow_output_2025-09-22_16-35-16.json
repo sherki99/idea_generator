@@ -1,0 +1,18 @@
+{
+  "user_input": {
+    "country_region": "Italia",
+    "industry_market": "transportation",
+    "target_market_type": "B2B",
+    "target_audience": {
+      "demographic": "B2B travel and tour operators focusing on transportation services in Italy",
+      "age_range": "28-45",
+      "income_level": "$50k-100k",
+      "tech_literacy": "Intermediate \u2013 uses booking software and CRM tools",
+      "pain_points": [
+        "Managing online bookings",
+        "Reaching B2B partners",
+        "SEO content for visibility"
+      ],
+      "buying_behavior": "Researches SaaS platforms, compares features, and relies on reviews before purchase"
+    },
+    "created_at": 

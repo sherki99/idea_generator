@@ -61,14 +61,14 @@ def user_persona_analysis_agent(state: BusinessIdeaGenerationState) -> Dict[str,
                 print(f"Reddit search failed for '{query}': {e}")
 
         # Prepare persona analysis data
-        persona_data = {
-            "industry": industry,
-            "target_market": user_input.target_market_type,
-            "existing_audience": target_audience.model_dump() if target_audience else None,
-            "reddit_insights": persona_insights
-        }
+        # persona_data = {
+        #     "industry": industry,
+        #     "target_market": user_input.target_market_type,
+        #     "existing_audience": target_audience.model_dump() if target_audience else None,
+        #     "reddit_insights": persona_insights
+        # }
         
-        persona_analysis_prompt = f"""
+        persona_analysis_prompt_1 = f"""
         Analyze user personas for {industry} industry based on demographic research and buying behavior.
         Focus on creating detailed user profiles with demographics, behavior patterns, and decision-making processes.
         
@@ -86,14 +86,71 @@ def user_persona_analysis_agent(state: BusinessIdeaGenerationState) -> Dict[str,
         - Pain points and motivations
         - Budget authority and price sensitivity
         """
-        
+
+
+        persona_analysis_prompt_2 = f"""
+            You are now refining the persona analysis for the {industry} industry.
+
+            Take the initial persona draft and transform it into a **structured and prioritized persona framework**. 
+            Focus on clarity, segmentation, and decision-making relevance.
+
+            Context:
+            - Industry: {industry}
+            - Target Market: {user_input.target_market_type}
+            - Existing Audience Info: {target_audience.model_dump() if target_audience else "None provided"}
+            - Research Insights: {json.dumps(persona_insights, indent=2)}...
+
+            Requirements for refined output:
+            1. **Persona Profiles**  
+            - Create at least 1 **primary persona** (main buyer/user) and 2-3 **secondary personas** (influencers, blockers, or niche users).  
+            - For each persona, include:
+                - Demographics (age, income, education, role, company size, geography)
+                - Behavioral traits (decision-making, buying process, adoption speed)
+                - Pain points and key motivations
+                - Budget authority and procurement role
+                - Preferred communication & research channels
+                - Price sensitivity
+
+            2. **Persona Prioritization**  
+            - Clearly indicate which persona is the most critical for go-to-market.  
+            - Justify why (market size, budget control, adoption likelihood).
+
+            3. **Cross-Persona Insights**  
+            - Identify common motivators across personas.  
+            - Highlight key differences (e.g., decision drivers of executives vs. end-users).  
+            - Note conflicts or blockers in the buying journey.
+
+            4. **Market Segmentation**  
+            - Break down personas by company size, role, and purchasing influence.  
+            - Provide insights into how personas interact during B2B or B2C decision-making.
+
+            5. **Confidence & Gaps**  
+            - Assign a confidence score (1-10) based on available data.  
+            - List missing data points that would improve persona accuracy.
+
+            Output should be structured, consistent, and concise enough to use directly in a go-to-market strategy document.
+            """
+
         try:
             print("Analyzing personas with LLM...")
             structured_personas = llm.with_structured_output(
                 UserPersonaAnalysisOutput,
                 method="function_calling"
-            ).invoke(persona_analysis_prompt)
+            ).invoke(persona_analysis_prompt_2)
+
+            if isinstance(structured_personas.market_segmentation, list):
+                structured_personas.market_segmentation = {
+                    f"segment_{i}": v for i, v in enumerate(structured_personas.market_segmentation)
+                }
+
+            if not structured_personas.sample_size:
+                structured_personas.sample_size = len(persona_insights) * 3
+
+
+
+
             print("LLM persona analysis successful")
+
             
         except Exception as e:
             print(f"LLM structured output failed: {e}")
@@ -162,7 +219,11 @@ def user_persona_analysis_agent(state: BusinessIdeaGenerationState) -> Dict[str,
         print(f"Confidence Score: {structured_personas.confidence_score}/10")
         
         return {
-            "user_persona_analysis": structured_personas,
+            "research_output":
+             {  
+                **(state.research_output.model_dump() if state.research_output else {}),
+                "user_persona_analysis" :  structured_personas
+             },
             "current_step": "user_persona_analysis_complete",
             "tools_used": state.tools_used + ["reddit_search", "azure_llm"],
         }

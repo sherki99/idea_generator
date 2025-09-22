@@ -5,15 +5,53 @@ from graph.state import (
     UserInput,
     TargetAudience,
     TargetMarket,
-    Phase1ResearchOutput
 )
 from datetime import datetime
 import traceback
+import json
 
 
+
+
+def save_business_model_output(final_state, output_folder="output"):
+    """
+    Save only the business_model_generator part of the final_state.
+    """
+    os.makedirs(output_folder, exist_ok=True)
+
+    try:
+        bmg_output = final_state['research_output'].get('business_model_generator')
+
+        if not bmg_output:
+            print("❌ No business_model_generator output found in final_state")
+            return
+
+        # Convert Pydantic object to dict if needed
+        if hasattr(bmg_output, "model_dump"):
+            json_data = bmg_output.model_dump(mode="json")
+        else:
+            json_data = bmg_output
+
+        # Find a new filename in order
+        i = 1
+        while True:
+            file_path = os.path.join(output_folder, f"business_model_output_{i}.json")
+            if not os.path.exists(file_path):
+                break
+            i += 1
+
+        with open(file_path, "w") as f:
+            json.dump(json_data, f, indent=2)
+
+    
+        print(f"✅ Saved business model output to {file_path}")
+
+    except Exception as e:
+        print(f"❌ Failed to save business model output: {str(e)}")
+        traceback.print_exc()
 
 def test_separated_workflow():
-    """Test the separated workflow"""
+    """Test the separated workflow including Phase 2"""
     
     # Create test user input
     target_audience = TargetAudience(
@@ -43,74 +81,29 @@ def test_separated_workflow():
     workflow = create_business_idea_workflow()
 
     try:
+
         final_state = workflow.invoke(initial_state)
 
-        # Create combined research output for backward compatibility
-        if (final_state.get('market_research') and 
-            final_state.get('pain_point_discovery') and 
-            final_state.get('user_persona_analysis')):
-            
-            research_output = Phase1ResearchOutput(
-                market_research=final_state['market_research'],
-                pain_point_discovery=final_state['pain_point_discovery'],
-                user_persona_analysis=final_state['user_persona_analysis'],
-                research_summary=f"""
-                Complete Phase 1 research for {user_input.industry_market}:
-                - Market Trends: {(final_state['market_research'].market_trends)}
-                - Competitors: {(final_state['market_research'].competitors)}
-                - Pain Points: {(final_state['pain_point_discovery'].pain_points)}
-                - User Personas: {(final_state['user_persona_analysis'].primary_personas)}
-                """,
-                research_quality_score=max(
-                    final_state['market_research'].confidence_score,
-                    final_state['pain_point_discovery'].confidence_score,
-                    final_state['user_persona_analysis'].confidence_score
-                ),
-                next_steps_recommendation="Phase 1 complete. Ready for business idea generation."
-            )
-            final_state['research_output'] = research_output
+        print(f"📊 Current Step: {final_state['current_step']}")
+        print(f"📊 Phase 1 Complete: {final_state.get('phase1_complete', False)}")
+        print(f"📊 Business Model Generator Output: {final_state['research_output'].get('business_model_generator')}")
 
-        # Generate simple report
-        report_lines = []
-        report_lines.append("# 📊 Separated Workflow Report\n")
-        report_lines.append(f"**Run Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        report_lines.append("---\n")
-        
-        if 'market_research' in final_state:
-            market = final_state['market_research']
-            report_lines.append("## 📈 Market Research")
-            report_lines.append(f"- Market Trends: **{(market.market_trends)}**")
-            report_lines.append(f"- Competitors: **{(market.competitors)}**")
-            report_lines.append(f"- Confidence: **{market.confidence_score}/10**\n")
+        # Save only business model output
+        save_business_model_output(final_state)
 
-        if 'pain_point_discovery' in final_state:
-            pain = final_state['pain_point_discovery']
-            report_lines.append("## 🎯 Pain Points")
-            report_lines.append(f"- Pain Points: **{(pain.pain_points)}**")
-            report_lines.append(f"- Categories: **{(pain.top_pain_categories)}**")
-            report_lines.append(f"- Confidence: **{pain.confidence_score}/10**\n")
-
-        if final_state.get('errors'):
-            report_lines.append("## Errors")
-            for error in final_state['errors']:
-                report_lines.append(f"- {error}\n")
-
-
-        with open("", "w", encoding="utf-8") as f:
-            f.write("\n".join(report_lines))
-
-        print("Separated Workflow completed successfully!")
-        print("📄Report saved to: separated_workflow_report.md")
         return final_state
 
     except Exception as e:
-        print(f"Workflow failed: {str(e)}")
+        print(f"❌ Workflow failed: {str(e)}")
         traceback.print_exc()
         return None
+
+
+
 
 if __name__ == "__main__":
     result = test_separated_workflow()
     if result:
-        print("\Test completed!")
+        print("\n✅ Test completed!")
     else:
-        print("\nTest failed!")
+        print("\n❌ Test failed!")

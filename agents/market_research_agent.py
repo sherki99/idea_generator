@@ -1,7 +1,6 @@
 """
 Market Research Agent - Only handles market trends and competitors
 """
-
 import os 
 from dotenv import load_dotenv 
 from langchain_openai import AzureChatOpenAI
@@ -63,7 +62,7 @@ def market_research_agent(state: BusinessIdeaGenerationState) -> Dict[str, Any]:
         Focus on automation opportunities, AI integration, and productivity improvements.
         
         Raw Data:
-        {json.dumps(market_research_data, indent=2)[:2000]}...
+        {json.dumps(market_research_data, indent=2)}...
         
         Identify:
         - Market trends with growth potential
@@ -119,7 +118,10 @@ def market_research_agent(state: BusinessIdeaGenerationState) -> Dict[str, Any]:
         print(f"Found {(structured_market_research.competitors)} competitors")
         
         return {
-            "market_research": structured_market_research,
+            "research_output" : {
+                **(state.research_output.model_dump() if state.research_output else {}),
+                "market_research": structured_market_research,
+            }, 
             "current_step": "market_research_complete",
             "tools_used": state.tools_used + ["google_trends", "azure_llm"],
         }

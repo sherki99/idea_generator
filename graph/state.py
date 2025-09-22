@@ -104,7 +104,7 @@ class PainPointDiscoveryOutput(BaseModel):
     analysis_date_range: str = Field(description="Data date range")
     confidence_score: float = Field(ge=0, le=10, description="Analysis confidence")
 
-# User Persona Models (simplified for now)
+# User Persona Models 
 class PersonaDemographics(BaseModel):
     """Demographic information for a persona."""
     age_range: str = Field(description="Age range")
@@ -133,8 +133,6 @@ class UserPersona(BaseModel):
     pain_points: List[str] = Field(default_factory=list, description="Pain points")
     goals_motivations: List[str] = Field(default_factory=list, description="Goals and motivations")
     preferred_features: List[str] = Field(default_factory=list, description="Valued features")
-    price_sensitivity: str = Field(description="Price sensitivity level")
-    persona_size: str = Field(description="Estimated persona size")
     accessibility_needs: Optional[List[str]] = Field(default_factory=list, description="Accessibility needs")
 
 class UserPersonaAnalysisOutput(BaseModel):
@@ -143,21 +141,70 @@ class UserPersonaAnalysisOutput(BaseModel):
     secondary_personas: List[UserPersona] = Field(default_factory=list, description="Secondary personas")
     persona_prioritization: Dict[str, str] = Field(default_factory=dict, description="Persona prioritization")
     cross_persona_insights: List[str] = Field(default_factory=list, description="Cross-persona insights")
-    market_segmentation: Dict[str, Any] = Field(default_factory=dict, description="Market segmentation")
+    market_segmentation: Union[Dict[str, Any], List[Dict[str, Any]]] = Field(
+        default_factory=dict, description="Market segmentation"
+    )
     research_methodology: List[str] = Field(default_factory=list, description="Research methods")
-    sample_size: int = Field(description="Total sample size")
+    sample_size: Optional[int] = Field(None, description="Total sample size")
     confidence_score: float = Field(ge=0, le=10, description="Persona accuracy confidence")
 
-# Complete Phase 1 Output Model
+
+
+# Phase 2: Niche Opportunity Scanner Models
+class NicheOpportunity(BaseModel):
+    """Individual niche opportunity identified."""
+    niche_name: str = Field(description="Name of the niche opportunity")
+    description: str = Field(description="Why this niche exists and what makes it unique")
+    target_persona: str = Field(description="Persona most aligned with this niche")
+    demand_level: str = Field(description="Demand level: Low, Medium, High")
+    trend_score: float = Field(ge=0, le=10, description="Trend score (0-10)")
+    competition_level: str = Field(description="Competition intensity: Low, Medium, High")
+    pain_points_addressed: List[str] = Field(default_factory=list, description="Pain points this niche addresses")
+    supporting_evidence: Optional[List[str]] = Field(default_factory=list, description="Evidence from research data")
+    estimated_market_size: Optional[str] = Field(None, description="Estimated market size if available")
+
+class NicheOpportunityScannerOutput(BaseModel):
+    """Output from Niche Opportunity Scanner Node."""
+    niches: List[NicheOpportunity]= Field(default_factory=list, description="List of niche opportunities") # this any should not be optional
+    prioritization: Dict[str, str] = Field(default_factory=dict, description="Recommended prioritization")
+    cross_niche_insights: Optional[List[str]] = Field(default_factory=list, description="Insights across niches")
+    confidence_score: float = Field(ge=0, le=10, description="Confidence in opportunity assessment")
+    research_sources: List[str] = Field(default_factory=list, description="Sources used in discovery")
+
+class BusinessIdea(BaseModel):
+    """Detailed business idea scoped to LLM-powered workflows."""
+    idea_name: str = Field(description="Name of the business idea")
+    niche: str = Field(description="Niche this idea addresses")
+    description: str = Field(description="Description of the SaaS idea and what it solves")
+    workflow_design: str = Field(description="How LangChain + LangGraph agents can solve this problem")
+    unique_value_prop: str = Field(description="Why this is uniquely valuable compared to alternatives")
+    monetization_strategy: str = Field(description="How the product can be monetized")
+    target_persona: str = Field(description="Primary user or customer persona")
+    feasibility_score: float = Field(ge=0, le=10, description="How feasible this is with LLMs + agents")
+    supporting_evidence: List[str] = Field(default_factory=list, description="Supporting signals from niche research")
+
+class BusinessModelGeneratorOutput(BaseModel):
+    """Output of business model generator agent."""
+    ideas: List[BusinessIdea] = Field(default_factory=list, description="Generated business ideas")
+    recommended_idea: Optional[str] = Field(None, description="The single best idea to pursue")
+    confidence_score: float = Field(ge=0, le=10, description="Confidence in these recommendations")
+
+
 class Phase1ResearchOutput(BaseModel):
     """Complete output from Phase 1: Research & Analysis."""
-    market_research: MarketResearchOutput = Field(description="Market research results")
-    pain_point_discovery: PainPointDiscoveryOutput = Field(description="Pain point analysis")
+    
+    market_research: Optional[MarketResearchOutput] = Field(None, description="Market research results")
+    pain_point_discovery: Optional[PainPointDiscoveryOutput] = Field(None, description="Pain point analysis")
     user_persona_analysis: Optional[UserPersonaAnalysisOutput] = Field(None, description="Persona research")
+    niche_opportunity: Optional[NicheOpportunityScannerOutput] = Field(None, description="Niche opportunities discovered")
+    business_model_generator: Optional[BusinessModelGeneratorOutput] = Field(None, description="SaaS ideas with AI multi-agent workflows")
+    
     research_summary: Optional[str] = Field(None, description="Research summary")
     key_opportunities: Optional[List[str]] = Field(None, description="Key opportunities")
-    research_quality_score: float = Field(ge=0, le=10, description="Research quality score")
+    research_quality_score: Optional[float] = Field(None, ge=0, le=10, description="Research quality score")
     next_steps_recommendation: Optional[str] = Field(None, description="Next steps")
+
+
 
 # State Model for LangGraph
 class BusinessIdeaGenerationState(BaseModel):
@@ -166,9 +213,10 @@ class BusinessIdeaGenerationState(BaseModel):
     user_input: UserInput = Field(description="User specifications")
     
     # Phase 1: Research outputs
-    phase1_complete: bool = Field(default=False, description="Phase 1 completion status")
-    research_output: Optional[Phase1ResearchOutput] = Field(None, description="Phase 1 results")
+    phase1_complete: bool = Field(default=False, description="completion status")
+    research_output: Phase1ResearchOutput = Field(None, description="Phase results")
     
+
     # Workflow management
     current_step: str = Field(default="initialization", description="Current step")
     errors: List[str] = Field(default_factory=list, description="Errors encountered")
@@ -182,25 +230,4 @@ class BusinessIdeaGenerationState(BaseModel):
     
     class Config:
         arbitrary_types_allowed = True
-
-    # class Config:
-    #     """Pydantic configuration."""
-    #     use_enum_values = True
-    #     validate_assignment = True
-    #     extra = "forbid"  # Don't allow extra fields
-    #     json_schema_extra = {
-    #         "example": {
-    #             "user_input": {
-    #                 "country_region": "United States",
-    #                 "industry_market": "Healthcare Technology",
-    #                 "target_market_type": "B2B",
-    #                 "target_audience": {
-    #                     "demographic": "Healthcare Practice Managers",
-    #                     "age_range": "30-50",
-    #                     "tech_literacy": "intermediate",
-    #                     "pain_points": ["Manual appointment scheduling", "Patient communication inefficiencies"]
-    #                 }
-    #             }
-    #         }
-    #     }
 
