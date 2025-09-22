@@ -10,6 +10,8 @@ from typing import Dict, Any
 
 from graph.state import BusinessIdeaGenerationState, PainPointDiscoveryOutput, PainPoint
 from tools.reddit_scrapper_tool import search_only
+from tools.twitter_search_tool import search_tweets
+
 
 load_dotenv(override=True)
 
@@ -49,20 +51,41 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
                 })
             except Exception as e: 
                 print(f"Reddit search failed for '{query}': {e}")
+        
+        
+        print(f"--- Searching Twitter for pain points in {industry}")
+        twitter_queries = [
+            f"{industry} problems",
+            f"{industry} issues",
+            f"{industry} challenges",
+        ]
+        twitter_insights = []
+        for query in twitter_queries:
+            try:
+                print(f"  Searching Twitter: {query}")
+                tweets = search_tweets(query, max_results=10)
+                twitter_insights.append({"query": query, "results": tweets})
+            except Exception as e:
+                print(f"Twitter search failed for '{query}': {e}")
 
-        # Pain points analysis
+        # --- Pain points analysis with LLM ---
+        combined_data = {
+            "reddit": reddit_insights,
+            "twitter": twitter_insights
+        }
         pain_points_prompt = f"""
-        Analyze Reddit discussions about {industry} to identify pain points and problems.
+        Analyze discussions from Reddit and Twitter about {industry} to identify pain points.
         Focus on repetitive tasks, manual processes, and efficiency issues.
-        
+
         Raw Data:
-        {json.dumps(reddit_insights, indent=2)[:2000]}...
-        
+        {json.dumps(combined_data, indent=2)[:2000]}...
+
         Extract:
         - Specific pain points with frequency and urgency scores
         - Categories of problems
         - Real user complaints and needs
         """
+
         
         try:
             print("Analyzing pain points with LLM...")

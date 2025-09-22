@@ -17,6 +17,7 @@ from graph.state import (
 )
 from tools.reddit_scrapper_tool import search_only
 from tools.google_search_trend_tool import get_trend, rising_trends
+from tools.openalex_market_signals import get_openalex_market_signals
 
 load_dotenv(override=True)
 
@@ -66,6 +67,16 @@ def niche_opportunity_scanner_agent(state: BusinessIdeaGenerationState) -> Dict[
         except Exception as e:
             trend_data.append({"error": f"Trend fetch failed: {str(e)}"})
 
+
+        # openalex_data = []
+        # try:
+            
+        #     openalex_data = get_openalex_market_signals(industry, top_n=5)
+        # except Exception as e:
+        #     openalex_data = {"error": str(e)}
+
+
+
         # Step 3: Analyze with LLM
         analysis_prompt = f"""
         You are a niche opportunity analysis agent.
@@ -76,6 +87,7 @@ def niche_opportunity_scanner_agent(state: BusinessIdeaGenerationState) -> Dict[
         - Pain Points: {json.dumps([p.model_dump() for p in pain_points], indent=2) if pain_points else "None"}
         - Reddit signals: {json.dumps(reddit_results, indent=2)}
         - Google Trends data: {json.dumps(trend_data, indent=2)}
+        - OpenAlex innovation signals: {json.dumps(openalex_data, indent=2)}
         
         Task:
         - Identify at least 3 niche opportunities.

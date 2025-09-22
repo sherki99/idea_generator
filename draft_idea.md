@@ -27,6 +27,9 @@ Problem-Solution Matcher Node → Match pain points with feasible solutions
 # User Persona Analysis Node → Demographic research, buying behavior analysis
 
 
+
+# App Store / Play Store APIs →
+# Crunchbase API
 # Reddit/Forum Scraper → Find real user complaints and needs
 # Google Trends API → Identify rising search patterns
 # ProductHunt API → Analyze successful launches and gaps
