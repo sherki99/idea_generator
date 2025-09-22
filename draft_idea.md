@@ -104,3 +104,8 @@ You're right! Let me give you a conceptual overview of the workflow structure an
 The key is making each idea hyper-specific to a particular industry vertical that has money to spend on solving their specific pain points!
 
 Would you like me to elaborate on any specific nodes or tools from this structure?
+
+
+
+
+# the main idea is to find a really deep ncihe saas buiss idea from after all so odign rease rf onay exuat au, Mayab I wan to aadd other tools or idea later but the main idea is to br bale ot give really gogod idea  valeubve idea of multi agn tsyet liek tdi wher eI iwllbudl a detil worklfo with cusotl tools and cna bve solve dreall reall ncieh idea whee I cna bri gn ofcu son small thign ctaha cna solv ewith langhcia n flancga wokrlfow with mutlt agent sysme that is the main goal fo evrth to find idea , scn eI odnt makre and what pepel stuell that why I think to build tjis id eita wokro fto be abel to gerete 5 idea bu chengt merete ocutnry cna iv deia for speic indut cna be relaly ncieh I ma sure i dont ot their provle, nd I use generr llm th giv erndo one tdo ereallu giv enceh oen that why so before thart look at my curr worklf I want to advuce why hsoud se what agent I hsud lincdue, 2 and finsh thsi liek this one then maybe the next step ti will be haiv this sture right byadditn new tools cusot prduct hunt and iffenr type of wkorklfo a lot simitl what the node flow differnt

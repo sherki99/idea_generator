@@ -107,6 +107,10 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
         print(f"Found {len(structured_pain_points.top_pain_categories)} categories")
         
         return {
+            "research_output": {
+                **(state.research_output.model_dump() if state.research_output else {}),
+                "pain_point_discovery": structured_pain_points,
+            },
             "pain_point_discovery": structured_pain_points,
             "current_step": "pain_point_discovery_complete",
             "tools_used": state.tools_used + ["reddit_search", "azure_llm"],
