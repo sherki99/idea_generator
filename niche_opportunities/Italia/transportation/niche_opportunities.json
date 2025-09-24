@@ -1,0 +1,60 @@
+{
+  "niches": [
+    {
+      "niche_name": "Automated Ticketing Solutions",
+      "description": "A micro-SaaS providing automated ticketing systems to reduce waiting times at transportation hubs through digital ticketing and self-service options.",
+      "target_persona": "Logistics Manager",
+      "demand_level": "High",
+      "trend_score": 8.0,
+      "competition_level": "Medium",
+      "pain_points_addressed": [
+        "Long waiting times at transportation hubs due to manual ticketing systems."
+      ],
+      "supporting_evidence": [
+        "High urgency and frequency scores for long waiting times",
+        "Multiple mentions of frustrations on social media platforms regarding ticketing delays"
+      ],
+      "estimated_market_size": "$200 million"
+    },
+    {
+      "niche_name": "AI-Powered Route Optimization",
+      "description": "An AI-driven tool that automates route planning for delivery logistics to maximize efficiency and reduce operational costs.",
+      "target_persona": "Logistics Manager",
+      "demand_level": "High",
+      "trend_score": 9.0,
+      "competition_level": "Medium",
+      "pain_points_addressed": [
+        "Inefficient route planning for delivery logistics."
+      ],
+      "supporting_evidence": [
+        "High urgency score for route planning inefficiencies",
+        "Frequent discussions about the need for better routing tools in industry forums"
+      ],
+      "estimated_market_size": "$150 million"
+    },
+    {
+      "niche_name": "Real-Time Public Transport Tracking",
+      "description": "A micro-SaaS that offers real-time tracking of public transport vehicles to enhance commuter experience and city planning.",
+      "target_persona": "Logistics Manager",
+      "demand_level": "Medium",
+      "trend_score": 7.0,
+      "competition_level": "Low",
+      "pain_points_addressed": [
+        "Difficulty in tracking the real-time location of public transport vehicles."
+      ],
+      "supporting_evidence": [
+        "Medium urgency score for real-time tracking needs",
+        "User quotes expressing frustration with current tracking solutions"
+      ],
+      "estimated_market_size": "$100 million"
+    }
+  ],
+  "prioritization": {},
+  "cross_niche_insights": [],
+  "confidence_score": 9.0,
+  "research_sources": [
+    "Industry reports",
+    "Social media discussions",
+    "Transportation forums"
+  ]
+}

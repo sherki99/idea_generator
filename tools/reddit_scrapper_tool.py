@@ -32,6 +32,7 @@ def search_only(
     time_filter: str = "month",
     sort: str = "new",
     limit: str = "5",
+    language:  str = "en",
 ) -> List[str]:
     """
     Use RedditSearchRun to search posts by query.
@@ -43,6 +44,7 @@ def search_only(
         subreddit=subreddit,
         limit=limit,
         sort=sort,
+        language=language
     )
 
     result = reddit_search_tool.run(tool_input=search_params.dict())
@@ -119,3 +121,4 @@ def load_post_only(
 
     # Filter posts by query string (case-insensitive)
     return [doc.page_content for doc in docs if query.lower() in doc.page_content.lower()]
+        

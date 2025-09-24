@@ -130,3 +130,16 @@ async def youtube_search_function_async(
 
         async def fetch_json(session, url, params):
             async with session.get(url, ...
+
+
+    
+
+
+
+    tool to implet for niche""
+    Source	Strength for Pain Point Discovery	Best Use
+Reddit	Large community, informal insights	Niche user complaints
+LinkedIn	Professional/B2B insights	Workflow & industry challenges
+G2/Capterra	Structured reviews	Identify missing features & tool gaps
+Quora	Open-ended questions	Directly expressed frustrations
+Industry-specific forums	Highly focused, niche	Deep domain pain points""

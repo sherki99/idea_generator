@@ -10,6 +10,7 @@ from agents.user_persona_analysis_agent import user_persona_analysis_agent
 # # Phase 2 Agents
 from agents.niche_opportunity_scanner_agent import niche_opportunity_scanner_agent
 from agents.business_model_generator_agent import business_model_generator_agent
+from agents.validate_ideas_agent import business_model_validation_agent
 
 
 #from agents.business_model_generator_agent import business_model_generator_node
@@ -30,6 +31,10 @@ def create_business_idea_workflow():
     workflow.add_node("niche_opportunity_scanner", niche_opportunity_scanner_agent)
     workflow.add_node("business_model_generator", business_model_generator_agent)
     # workflow.add_node("problem_solution_matcher", problem_solution_matcher_node)
+
+       
+    # Phase 3: Validation Node
+    workflow.add_node("business_model_validation", business_model_validation_agent)
     
     # Set entry point
     workflow.set_entry_point("market_research")
@@ -41,10 +46,10 @@ def create_business_idea_workflow():
     
     # # Transition from Phase 1 to Phase 2
     workflow.add_edge("user_persona_analysis", "niche_opportunity_scanner")
+    workflow.add_edge("niche_opportunity_scanner", "business_model_generator")
     
-    # # Phase 2 workflow edges
-    workflow.add_edge("niche_opportunity_scanner","business_model_generator")
-    workflow.add_edge("business_model_generator", END)
-    # workflow.add_edge("problem_solution_matcher", END)
+    # Phase 3: Validation edges
+    workflow.add_edge("business_model_generator", "business_model_validation")
+    workflow.add_edge("business_model_validation", END)
     
     return workflow.compile()

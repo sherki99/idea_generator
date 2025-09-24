@@ -11,6 +11,10 @@ Workflow:
    - Description, persona, frequency, urgency, impact, automation potential,
      micro-SaaS solution potential, evidence sources, category.
 4. Output structured JSON for downstream AI solution agents.
+
+Dependencies:
+- AzureChatOpenAI, LangChain, custom Reddit/Twitter scraping tools,
+  BusinessIdeaGenerationState, PainPointDiscoveryOutput.
 """
 
 import os 
@@ -18,7 +22,6 @@ from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 import json 
 from typing import Dict, Any
-from pathlib import Path
 
 from graph.state import BusinessIdeaGenerationState, PainPointDiscoveryOutput, PainPoint
 from tools.reddit_scrapper_tool import search_only
@@ -45,50 +48,15 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
     industry = user_input.industry_market
     country = user_input.country_region
 
-    EXPANSION_PROMPT = f"""
-        You are the Subdomain Expansion Agent.
-
-        Task:
-        - Given industry = "{industry}" in "{country}", take in consideration the country bias identify 10-15 **workflow subdomains**
-        (functions, roles, or processes) that are most likely to have recurring pain points.
-        - For each subdomain, give:
-            - Subdomain name
-            - Typical persona(s) affected
-            - Why this subdomain is pain-point heavy
-        - Return in structured JSON list.
-
-        Example (for "Healthcare, USA"):
-        [
-            {{
-                "subdomain": "Patient Onboarding",
-                "personas": ["Clinic staff", "Nurses"],
-                "reason": "Manual paperwork, long wait times, insurance bottlenecks"
-            }},
-            {{
-                "subdomain": "Lab Results Reporting",
-                "personas": ["Doctors", "Patients"],
-                "reason": "Delays, miscommunication, scattered systems"
-            }}
-        ]
-        """
-    
-    try:
-        subdomains = llm.with_structured_output(method="json_mode").invoke([
-            {"role": "system", "content": "You are an expert in workflow analysis."},
-            {"role": "user", "content": EXPANSION_PROMPT}
-        ])
-        print(f"Identified subdomains: {subdomains}")
-    except Exception as e:
-        print(f"Subdomain expansion failed: {e}")
-        subdomains = [{"subdomain": industry, "personas": ["General"], "reason": "Fallback"}]
-
     PAIN_POINT_SYSTEM_MESSAGE = f"""
         You are the Pain Point Discovery Agent in SaaS Idea Lab — an AI-powered micro-SaaS generator.
-        
+
         Your responsibilities:
         1. Identify **pain points, inefficiencies, and unmet needs** within {industry} in {country}.
-        2. Expand your search across the following subdomains/workflows:
-          {json.dumps(subdomains, indent=2)}
+        2. Focus ONLY on problems that can be solved entirely with **AI workflows and multi-agent automation**, including:
+        - Multi-agent collaboration (LangChain, LangGraph)
+        - Integration with existing APIs and tools
+        - Fully automated solutions with minimal human intervention
         3. Base findings on **evidence from research**, including:
         - Personas
         - Market trends
@@ -101,7 +69,7 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
         - Target persona
         - Urgency
         - Impact level (Low/Medium/High)
-        - AI workflow automation potential (10-15)
+        - AI workflow automation potential (1–10)
         - Solution potential as AI-powered micro-SaaS
         - Source(s)
         6. Group pain points into meaningful categories (manual tasks, inefficiencies, missing AI-enabled tools, workflow gaps)
@@ -113,23 +81,20 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
     query_prompt = f"""
         You are the Pain Point Discovery Agent.
         Goal: uncover **all pain points** in {industry} in {country} that can be solved entirely with AI workflows.
-        Generate search queries **in language of the {country}** to find real pain points on Reddit/Twitter.
 
         Instructions:
         1. Decide autonomously which platforms, subreddits, hashtags, or forums to explore.
         2. Generate multiple search queries per platform.
         3. For each query, specify:
         - tool (reddit/twitter/forum)
-        - subreddit 
+        - subreddit or hashtag if applicable
         - query text
-        - result limit(never less then 5)
-        I want to have at least 20 query for each one for twitter and reddit each 
+        - result limit
         4. Output JSON array in this format:
-
 
         [
         {{ "tool": "reddit", "subreddit": "subreddit_name", "query": "...", "limit": 5 }},
-        {{ "tool": "twitter", "subreddit": "subreddit_name", "#example", "query": "...", "limit": 10 }}
+        {{ "tool": "twitter", "hashtag": "#example", "query": "...", "limit": 10 }}
         ]
 
         Focus ONLY on problems that could be fully solved by AI workflows (automation, multi-agent collaboration, tool integrations).
@@ -140,22 +105,8 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
         {"role": "user", "content": query_prompt}
     ]
 
-    suggested_queries_raw = llm.with_structured_output(method="json_mode").invoke(messages)
-  #  suggested_queries = json.loads(suggested_queries_json)
-
-    print(type(suggested_queries_raw))
-    print("the queries are", suggested_queries_raw)
-
-
-    if isinstance(suggested_queries_raw, str):
-        suggested_queries = json.loads(suggested_queries_raw)
-    elif isinstance(suggested_queries_raw, dict):
-        # If your LLM returns {"__root__": [...]}, unwrap
-        suggested_queries = suggested_queries_raw.get("__root__", [])
-    elif isinstance(suggested_queries_raw, list):
-        suggested_queries = suggested_queries_raw
-    else:
-        suggested_queries = []
+    suggested_queries_json = llm.with_structured_output(messages, function="json_mode")
+    suggested_queries = json.loads(suggested_queries_json)
 
 
     collected_data = []
@@ -163,10 +114,10 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
         try:
             if q["tool"] == "reddit":
                 subreddit = q.get("subreddit")
-                results = search_only(q["query"], subreddit=subreddit, limit=q.get("limit", 15))
+                results = search_only(q["query"], subreddit=subreddit, limit=q.get("limit", 3))
             elif q["tool"] == "twitter":
                 hashtag = q.get("hashtag")
-                results = search_tweets(q["query"], hashtag=hashtag, max_results=q.get("limit", 15))
+                results = search_tweets(q["query"], hashtag=hashtag, max_results=q.get("limit", 10))
             else:
                 results = []
             collected_data.append({
@@ -182,10 +133,13 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
             })
 
 
+
+
     PAIN_POINT_USER_PROMPT = f"""
     You are the Pain Point Discovery Agent.
 
-    Your task: Identify **actionable pain points** in {industry} that can be fully solved with AI workflows or AI-powered micro-SaaS solutions.
+    Your task: Identify **actionable pain points** in {industry} that can be fully solved with AI workflows or AI-powered micro-SaaS solutions
+    pain point or repetive task that can be solved thanks to AI agents workflow
 
     Social signals collected:
     {json.dumps(collected_data, indent=2)}
@@ -208,12 +162,12 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
     ⚠️ If no actionable pain points exist, respond:
     "⚠️ No sufficiently validated, actionable pain points identified. Recommend expanding research scope."
     """
-    
+
     try:
         print("Analyzing pain points with LLM...")
         structured_pain_points = llm.with_structured_output(
             PainPointDiscoveryOutput,
-            method="function_calling"
+            method="function"
         ).invoke(PAIN_POINT_USER_PROMPT)
         print("LLM pain points analysis successful")
     except Exception as e:
@@ -235,27 +189,20 @@ def pain_point_discovery_agent(state: BusinessIdeaGenerationState) -> Dict[str, 
                     current_solutions=["Manual processes", "Basic tools"]
                 )
             ],
-            # top_pain_categories=[
-            #     f"{industry} manual processes",
-            #     f"{industry} data entry",
-            #     f"{industry} reporting tasks"
-            # ],
-            # data_sources=["reddit"],
-            # total_mentions_analyzed=sum(len(d.get("results", [])) for d in collected_data),
-            # analysis_date_range="past month",
-            # confidence_score=6.0
+            top_pain_categories=[
+                f"{industry} manual processes",
+                f"{industry} data entry",
+                f"{industry} reporting tasks"
+            ],
+            data_sources=["reddit"],
+            total_mentions_analyzed=sum(len(d.get("results", [])) for d in collected_data),
+            analysis_date_range="past month",
+            confidence_score=6.0
         )
 
     print("Pain Point Discovery Complete!")
-    print(f"Found {(structured_pain_points.pain_points)} pain points")
-    print(f"Found {(structured_pain_points.top_pain_categories)} categories")
-
-    save_path = Path(f"pain_points/{country}/{industry}")
-    save_path.mkdir(parents=True, exist_ok=True)
-    output_file =  save_path /  "pain_points.json"
-
-    with open(output_file, "w" , encoding="utf-8") as f: 
-        json.dump(structured_pain_points.model_dump(),f ,indent=2, ensure_ascii=False)
+    print(f"Found {len(structured_pain_points.pain_points)} pain points")
+    print(f"Found {len(structured_pain_points.top_pain_categories)} categories")
 
     return {
         "research_output": {

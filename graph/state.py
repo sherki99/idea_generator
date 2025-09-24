@@ -26,6 +26,7 @@ class Industry(str, Enum):
     MARKETING = "marketing"
     LEGAL = "legal"
     HUMAN_RESOURCES = "human_resources"  
+    
 
 # Phase 0: User Input Models
 class TargetAudience(BaseModel):
@@ -41,6 +42,7 @@ class UserInput(BaseModel):
     """Complete user input specification."""
     country_region: str = Field(description="Target country/region")
     industry_market: str = Field(description="Industry focus")
+    language : str = Field(description="language of the country")
     target_market_type: TargetMarket = Field(description="Business model type")
     target_audience: Optional[TargetAudience] = Field(None, description="Target audience details")
     created_at: datetime = Field(default_factory=datetime.now)
@@ -65,8 +67,8 @@ class MarketTrend(BaseModel):
     market_size: Optional[str] = Field(None, description="Current market size")
     projected_size: Optional[str] = Field(None, description="Projected market size")
     key_drivers: List[str] = Field(default_factory=list, description="Trend drivers")
-    time_horizon: str = Field(description="Expected duration")
-    relevance_score: float = Field(ge=0, le=10, description="Relevance score (0-10)")
+    time_horizon: Optional[str] = Field(description="Expected duration")
+    relevance_score: Optional[float] = Field(ge=0, le=10, description="Relevance score (0-10)")
 
 class MarketResearchOutput(BaseModel):
     """Output from Market Research Node."""
@@ -190,6 +192,30 @@ class BusinessModelGeneratorOutput(BaseModel):
     confidence_score: float = Field(ge=0, le=10, description="Confidence in these recommendations")
 
 
+class CompetitorInfo(BaseModel):
+    """Information about a competitor for a given business idea."""
+    name: str
+    description: str
+    pros: List[str] = Field(default_factory=list)
+    cons: List[str] = Field(default_factory=list)
+    positive_reviews: List[str] = Field(default_factory=list)
+    negative_reviews: List[str] = Field(default_factory=list)
+
+
+class BusinessModelValidationOutput(BaseModel):
+    """Structured output from the Business Model Validation Agent."""
+    validated_idea_name: str
+    feasibility_score: float = Field(ge=0, le=10, description="Feasibility of the idea")
+    revenue_potential: Optional[str] = Field(None, description="Expected revenue potential")
+    suggested_improvements: List[str] = Field(default_factory=list)
+    differentiation_points: List[str] = Field(default_factory=list)
+    key_insights: Optional[str] = Field(None, description="Summary of research insights")
+    competitor_list: List[CompetitorInfo] = Field(default_factory=list)
+    
+
+
+
+
 class Phase1ResearchOutput(BaseModel):
     """Complete output from Phase 1: Research & Analysis."""
     
@@ -198,6 +224,7 @@ class Phase1ResearchOutput(BaseModel):
     user_persona_analysis: Optional[UserPersonaAnalysisOutput] = Field(None, description="Persona research")
     niche_opportunity: Optional[NicheOpportunityScannerOutput] = Field(None, description="Niche opportunities discovered")
     business_model_generator: Optional[BusinessModelGeneratorOutput] = Field(None, description="SaaS ideas with AI multi-agent workflows")
+    business_model_validation: Optional[BusinessModelValidationOutput] = None
     
     research_summary: Optional[str] = Field(None, description="Research summary")
     key_opportunities: Optional[List[str]] = Field(None, description="Key opportunities")

@@ -1,15 +1,15 @@
 """
-Niche Opportunity Scanner Agent
-Identifies emerging / underserved niches by combining persona insights, pain points, and market trends.
+Niche Opportunity Scanner Agent - Enhanced version
+Combines structured pain points, subdomains, and multi-source signals to identify validated micro-SaaS niches.
 """
 
 import os
 import json
+from pathlib import Path
 from dotenv import load_dotenv
 from typing import Dict, Any, List
 
 from langchain_openai import AzureChatOpenAI
-
 from graph.state import (
     BusinessIdeaGenerationState,
     NicheOpportunityScannerOutput,
@@ -17,7 +17,7 @@ from graph.state import (
 )
 from tools.reddit_scrapper_tool import search_only
 from tools.google_search_trend_tool import get_trend, rising_trends
-from tools.openalex_market_signals import get_openalex_market_signals
+from tools.twitter_search_tool import search_tweets
 
 load_dotenv(override=True)
 
@@ -25,116 +25,113 @@ llm = AzureChatOpenAI(
     azure_endpoint=os.getenv("AZURE_API_BASE"),
     api_key=os.getenv("AZURE_API_KEY"),
     api_version=os.getenv("AZURE_API_VERSION"),
-    azure_deployment=os.getenv("LLM_DEPLOYMENT_NAME")     
+    azure_deployment=os.getenv("LLM_DEPLOYMENT_NAME")
 )
 
-
 def niche_opportunity_scanner_agent(state: BusinessIdeaGenerationState) -> Dict[str, Any]:
-    """
-    Scan for niche opportunities within the target industry.
-    Combines Reddit discussions + Google Trends + persona insights.
-    """
-
-    print("🔍 Starting Niche Opportunity Scanning...")
+    print("🔍 Starting Enhanced Niche Opportunity Scanning...")
 
     try:
+        # --- Gather context ---
         industry = state.user_input.industry_market
-        personas = state.research_output.user_persona_analysis.primary_personas if state.research_output.user_persona_analysis else []
+        country = state.user_input.country_region
+        language = state.user_input.language if hasattr(state.user_input, "language") else "en"
+
+        # Use structured pain points
         pain_points = state.research_output.pain_point_discovery.pain_points if state.research_output.pain_point_discovery else []
 
-        # Step 1: Collect Reddit signals
-        reddit_queries = [
-            f"{industry} unmet needs",
-            f"{industry} alternatives",
-            f"{industry} competitors",
-            f"best tools for {industry}",
-            f"{industry} gaps in market"
-        ]
-        reddit_results = []
-        for q in reddit_queries:
-            try:
-                result = search_only(q, limit="3")
-                reddit_results.append({"query": q, "results": result})
-            except Exception as e:
-                reddit_results.append({"query": q, "error": str(e)})
+        # Subdomains/workflows for targeted search
+        subdomains = state.research_output.pain_point_discovery.top_pain_categories if state.research_output.pain_point_discovery else [industry]
 
-        # Step 2: Collect Google Trends signals
+        # Personas
+        personas = state.research_output.user_persona_analysis.primary_personas if state.research_output.user_persona_analysis else []
+
+        # --- Collect multi-source signals ---
+        signals = []
+
+        for sd in subdomains:
+            query = f"{sd} problems OR inefficiencies OR pain points"
+            try:
+                reddit_results = search_only(query, limit=3, language=language)
+                signals.append({"source": "reddit", "subdomain": sd, "results": reddit_results})
+            except Exception as e:
+                signals.append({"source": "reddit", "subdomain": sd, "error": str(e)})
+            
+            try:
+                twitter_results = search_tweets(query, max_results=5, language=language)
+                signals.append({"source": "twitter", "subdomain": sd, "results": twitter_results})
+            except Exception as e:
+                signals.append({"source": "twitter", "subdomain": sd, "error": str(e)})
+
+        # Google Trends
         trend_data = []
         try:
             trend_data.append(rising_trends(industry))
-            for p in pain_points[:4]:  # limit to top pain points
+            for p in pain_points[:5]:
                 trend_data.append(get_trend(p.problem_description))
         except Exception as e:
             trend_data.append({"error": f"Trend fetch failed: {str(e)}"})
 
-
-        # openalex_data = []
-        # try:
-            
-        #     openalex_data = get_openalex_market_signals(industry, top_n=5)
-        # except Exception as e:
-        #     openalex_data = {"error": str(e)}
-
-
-
-        # Step 3: Analyze with LLM
-        analysis_prompt = f"""
-        You are a niche opportunity analysis agent.
-        Analyze the {industry} market and identify emerging or underserved niches.
-        
-        Inputs:
-        - Personas: {json.dumps([p.model_dump() for p in personas], indent=2) if personas else "None"}
-        - Pain Points: {json.dumps([p.model_dump() for p in pain_points], indent=2) if pain_points else "None"}
-        - Reddit signals: {json.dumps(reddit_results, indent=2)}
-        - Google Trends data: {json.dumps(trend_data, indent=2)}
-        - OpenAlex innovation signals: {json.dumps(openalex_data, indent=2)}
-        
-        Task:
-        - Identify at least 3 niche opportunities.
-        - For each: describe the opportunity, target persona, why demand exists, and why it’s underserved.
-        - Rate demand level (Low/Medium/High), trend score (1-10), competition level (Low/Medium/High).
-        - Recommend which niches should be prioritized.
+        # --- Prepare LLM prompt ---
+        NICHE_SYSTEM_MSG = """
+        You are a Niche Opportunity Scanner Agent. Identify emerging or underserved micro-SaaS niches.
+        Focus on niches validated by pain points, personas, subdomains, and market signals.
         """
 
-        try:
-            structured_output = llm.with_structured_output(
-                NicheOpportunityScannerOutput,
-                method="function_calling"
-            ).invoke(analysis_prompt)
+        NICHE_USER_PROMPT = f"""
+        Task:
+        - Identify niches for micro-SaaS in {industry} ({country}).
+        - Input data:
+          * Personas: {json.dumps([p.model_dump() for p in personas], indent=2) if personas else "None"}
+          * Structured Pain Points: {json.dumps([p.model_dump() for p in pain_points], indent=2) if pain_points else "None"}
+          * Subdomains: {json.dumps(subdomains, indent=2)}
+          * Market signals: {json.dumps(signals, indent=2)}
+          * Trends: {json.dumps(trend_data, indent=2)}
+        Instructions:
+        - Identify at least 3 underserved niches.
+        - For each niche:
+          - Name, description, target persona, pain points addressed
+          - Why underserved
+          - Potential SaaS solution
+          - Demand, trend score, competition, confidence
+          - Evidence sources
+        - Prioritize niches by impact, automation potential, and trend.
+        - Output in structured JSON.
+        ⚠️ Only generate niches if supported by evidence. Otherwise respond:
+        "⚠️ No sufficiently validated opportunities identified."
+        """
 
-            print("✅ LLM successfully generated niche opportunities")
-        except Exception as e:
-            print(f"LLM structured output failed: {e}")
-            # fallback
-            fallback_niche = NicheOpportunity(
-                niche_name=f"{industry} Automation Tools",
-                description=f"Tools to automate repetitive tasks in {industry}.",
-                target_persona="Mid-level professionals",
-                demand_level="High",
-                trend_score=7.5,
-                competition_level="Medium",
-                pain_points_addressed=["Efficiency", "Time management"],
-            )
-            structured_output = NicheOpportunityScannerOutput(
-                niches=[fallback_niche],
-                prioritization={"top_opportunity": fallback_niche.niche_name},
-                confidence_score=6.5,
-                research_sources=["reddit_search", "google_trends"]
-            )
+        messages = [
+            {"role": "system", "content": NICHE_SYSTEM_MSG},
+            {"role": "user", "content": NICHE_USER_PROMPT}
+        ]
+
+        structured_output = llm.with_structured_output(
+            NicheOpportunityScannerOutput,
+            method="function_calling"
+        ).invoke(messages)
+
+        # --- Save JSON output per country/industry/subdomain ---
+        save_path = Path(f"niche_opportunities/{country}/{industry}")
+        save_path.mkdir(parents=True, exist_ok=True)
+        output_file = save_path / "niche_opportunities.json"
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(structured_output.model_dump(), f, indent=2, ensure_ascii=False)
+
+        print("✅ Niche opportunities scanning complete and saved.")
 
         return {
-
             "research_output": {
                 **(state.research_output.model_dump() if state.research_output else {}),
-                 "niche_opportunity": structured_output,
+                "niche_opportunity": structured_output,
             },
-      
             "current_step": "niche_opportunity_scanner_complete",
-            "tools_used": state.tools_used + ["reddit_search", "google_trends", "azure_llm"],
+            "tools_used": state.tools_used + ["reddit_search", "twitter_search", "google_trends", "azure_llm"],
         }
 
     except Exception as e:
-        print(f"❌ Niche Opportunity Scanner failed: {e}")
+        print(f"Niche Opportunity Scanner failed: {e}")
         return {
             "current_step": "niche_opportunity_scanner_failed",
             "errors": state.errors + [f"Niche opportunity scanner failed: {str(e)}"]

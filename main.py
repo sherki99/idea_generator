@@ -53,21 +53,21 @@ def save_business_model_output(final_state, output_folder="output"):
 def test_separated_workflow():
     """Test the separated workflow including Phase 2"""
     
-    # Create test user input
-    target_audience = TargetAudience(
-        demographic="B2B travel and tour operators focusing on transportation services in Italy",
-        tech_literacy="Intermediate – uses booking software and CRM tools",
-        pain_points=["Managing online bookings", "Reaching B2B partners", "SEO content for visibility"],
-        age_range="28-45",
-        income_level="$50k-100k",
-        buying_behavior="Researches SaaS platforms, compares features, and relies on reviews before purchase"
-    )
+    # # Create test user input
+    # target_audience = TargetAudience(
+    #     demographic="B2B travel and tour operators focusing on transportation services in Italy",
+    #     tech_literacy="Intermediate – uses booking software and CRM tools",
+    #     pain_points=["Managing online bookings", "Reaching B2B partners", "SEO content for visibility"],
+    #     age_range="28-45",
+    #     income_level="$50k-100k",
+    #     buying_behavior="Researches SaaS platforms, compares features, and relies on reviews before purchase"
+    # )
 
     user_input = UserInput(
         country_region="Italia",
         industry_market="transportation",
         target_market_type=TargetMarket.B2B,
-        target_audience=target_audience,
+        language="it"
     )
 
     # Create initial state

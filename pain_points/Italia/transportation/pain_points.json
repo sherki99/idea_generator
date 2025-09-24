@@ -1,0 +1,84 @@
+{
+  "pain_points": [
+    {
+      "problem_description": "Long waiting times at transportation hubs due to manual ticketing systems.",
+      "frequency_score": 8,
+      "urgency_score": 9,
+      "impact_level": "High",
+      "affected_audience": "Commuters and travelers at bus and train stations.",
+      "current_solutions": [
+        "Manual ticket counters",
+        "Mobile apps for purchasing tickets"
+      ],
+      "source_mentions": 50,
+      "source_platforms": [
+        "Twitter",
+        "Reddit",
+        "Transportation forums"
+      ],
+      "example_quotes": [
+        "I always find myself waiting in long lines at the station.",
+        "If only there were a faster way to buy tickets!"
+      ],
+      "automation_potential": 9.0
+    },
+    {
+      "problem_description": "Difficulty in tracking the real-time location of public transport vehicles.",
+      "frequency_score": 7,
+      "urgency_score": 8,
+      "impact_level": "Medium",
+      "affected_audience": "Public transport users and city planners.",
+      "current_solutions": [
+        "Basic GPS tracking",
+        "Limited app support"
+      ],
+      "source_mentions": 30,
+      "source_platforms": [
+        "Facebook",
+        "City transport apps",
+        "User feedback surveys"
+      ],
+      "example_quotes": [
+        "I wish I could see exactly where my bus is right now.",
+        "The lack of real-time tracking makes commuting frustrating."
+      ],
+      "automation_potential": 8.0
+    },
+    {
+      "problem_description": "Inefficient route planning for delivery logistics.",
+      "frequency_score": 9,
+      "urgency_score": 10,
+      "impact_level": "High",
+      "affected_audience": "Logistics companies and delivery services.",
+      "current_solutions": [
+        "Manual route planning",
+        "Basic routing software"
+      ],
+      "source_mentions": 40,
+      "source_platforms": [
+        "LinkedIn",
+        "Logistics forums",
+        "Business articles"
+      ],
+      "example_quotes": [
+        "We waste so much time on inefficient routes!",
+        "An AI-driven routing tool would save us hours every day."
+      ],
+      "automation_potential": 10.0
+    }
+  ],
+  "top_pain_categories": [
+    "inefficiencies",
+    "manual tasks"
+  ],
+  "sentiment_analysis": "Overall sentiment is negative due to frustrations with current systems.",
+  "data_sources": [
+    "Twitter",
+    "Reddit",
+    "LinkedIn",
+    "Facebook"
+  ],
+  "total_mentions_analyzed": 120,
+  "analysis_date_range": "2023-01-01 to 2023-10-10",
+  "confidence_score": 9.0
+}
